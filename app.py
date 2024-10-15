@@ -5,7 +5,6 @@ import duckdb
 import io
 
 
-
 csv = """
 beverage,price
 orange juice,2.5
@@ -27,6 +26,18 @@ select * from beverages
 cross join food_items"""
 
 solution = duckdb.sql(answer).df()
+
+with st.sidebar:
+    option = st.selectbox(
+        "What would you like to review ?",
+        ("Joins", "GroupBy", "Windows Function"),
+        index=None,
+        placeholder="Select a theme...",
+    )
+    st.write("You selected:", option)
+
+
+
 st.header("enter your code:")
 
 query = st.text_area(label="votre code SQL ici", key="user_input")
