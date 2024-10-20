@@ -31,7 +31,7 @@ cross join food_items"""
 
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=True)
 
-#solution_df = duckdb.sql(ANSWER_STR).df()
+# solution_df = duckdb.sql(ANSWER_STR).df()
 
 with st.sidebar:
     theme = st.selectbox(
@@ -83,10 +83,9 @@ with tab2:
     if not exercices.empty:
         try:
             # Vérifier que l'index existe avant d'y accéder
-            #exercice_tables = ast.literal_eval(exercices.loc[0, "tables"])
+            # exercice_tables = ast.literal_eval(exercices.loc[0, "tables"])
             # Utiliser directement la valeur sans passer par ast.literal_eval
             exercice_tables = exercices.loc[0, "tables"]
-
 
             # Si exercice_tables est un tableau numpy ou une liste
             if isinstance(exercice_tables, (list, pd.Series, np.ndarray)):
@@ -108,6 +107,6 @@ with tab2:
 #
 with tab3:
     exercise_name = exercices.loc[0, "exercise_name"]
-    with open(f"answers/{exercise_name}.sql","r") as f:
+    with open(f"answers/{exercise_name}.sql", "r") as f:
         answer = f.read()
     st.write(answer)
