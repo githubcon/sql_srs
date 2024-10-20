@@ -29,11 +29,10 @@ ANSWER_STR = """
 select * from beverages 
 cross join food_items"""
 
-con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=True)
+con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
-# solution_df = duckdb.sql(ANSWER_STR).df()
 
-with st.sidebar:
+with st.sidebar :
     theme = st.selectbox(
         "What would you like to review ?",
         ("cross_joins", "GroupBy", "Windows Function"),
@@ -51,6 +50,12 @@ with st.sidebar:
     else:
         st.write("No exercises found for this theme.")
 
+    exercise_name = exercices.loc[0, "exercise_name"]
+    with open(f"answers/{exercise_name}.sql", "r") as f:
+        answer = f.read()
+
+    solution_df = con.execute(answer).df()
+
 
 st.header("Enter your code:")
 
@@ -59,25 +64,25 @@ if query:
     result = con.execute(query).df()
     st.dataframe(result)
 #
-#     if len(result.columns) != len(solution_df.columns):
-#         # replace with try result = result(solution_df.columns)
-#         st.write("Some columns are missing")
-#
-#         n_lines_difference = result.shape[0] - solution_df.shape[0]
-#     try:
-#         result = result[solution_df.columns]
-#         st.dataframe(result.compare(solution_df))
-#     except KeyError as e:
-#         st.write("Some columns are missing")
-#
-#     n_lines_difference = result.shape[0] - solution_df.shape[0]
-#     if n_lines_difference != 0:
-#         st.write(
-#             f"result has a {n_lines_difference} lines difference with "
-#             f"the solution_df"
-#         )
-#
-#
+    if len(result.columns) != len(solution_df.columns):
+        # replace with try result = result(solution_df.columns)
+        st.write("Some columns are missing")
+
+        n_lines_difference = result.shape[0] - solution_df.shape[0]
+    try:
+        result = result[solution_df.columns]
+        st.dataframe(result.compare(solution_df))
+    except KeyError as e:
+        st.write("Some columns are missing")
+
+    n_lines_difference = result.shape[0] - solution_df.shape[0]
+    if n_lines_difference != 0:
+        st.write(
+            f"result has a {n_lines_difference} lines difference with "
+            f"the solution_df"
+        )
+
+
 tab2, tab3 = st.tabs(["Tables", "Solution"])
 with tab2:
     if not exercices.empty:
@@ -106,7 +111,4 @@ with tab2:
 
 #
 with tab3:
-    exercise_name = exercices.loc[0, "exercise_name"]
-    with open(f"answers/{exercise_name}.sql", "r") as f:
-        answer = f.read()
     st.write(answer)
