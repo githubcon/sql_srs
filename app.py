@@ -2,9 +2,23 @@
 import io
 
 # import numpy as np
+import os
+import logging
 import duckdb
 import pandas as pd
 import streamlit as st
+from datetime import date, timedelta
+
+if "data" not in os.listdir():
+    print("creating folder data")
+    logging.error(os.listdir())
+    logging.error("creating folder data")
+    os.mkdir("data")
+
+if "exercises_sql_tables.duckdb" not in os.listdir("data"):
+    exec(open("init_db.py").read())
+    # subprocess.run(["python", "init_db.py"]
+
 
 CSV = """
 beverage,price
@@ -22,29 +36,64 @@ muffin,3
 """
 food_items = pd.read_csv(io.StringIO(CSV2))
 
+sizes = """
+size
+XS
+M
+L
+XL
+"""
+sizes = pd.read_csv(io.StringIO(sizes))
+
+trademarks = """
+trademark
+Nike
+Asphalte
+Abercrombie
+Lewis
+"""
+trademarks = pd.read_csv(io.StringIO(trademarks))
+
 ANSWER_STR = """
 select * from beverages 
 cross join food_items"""
 
-solution_df = duckdb.sql(ANSWER_STR).df()
+con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=True)
 
-with st.sidebar:
-    option = st.selectbox(
+
+with st.sidebar :
+    theme = st.selectbox(
         "What would you like to review ?",
-        ("Joins", "GroupBy", "Windows Function"),
+        ("cross_joins", "GroupBy", "Windows Function"),
         index=None,
         placeholder="Select a theme...",
     )
-    st.write("You selected:", option)
+    st.write("You selected:", theme)
+
+    # Récupérer les exercices correspondant au thème sélectionné
+    exercices = con.execute(f"select * from memory_state where theme = '{theme}'").df()\
+        .sort_values("last_reviewed").reset_index(drop=True)
+
+    # Vérifier si le DataFrame n'est pas vide avant d'accéder aux données
+    if not exercices.empty:
+        st.write(exercices)
+    else:
+        st.write("No exercises found for this theme.")
+
+    exercise_name = exercices.loc[0, "exercise_name"]
+    with open(f"answers/{exercise_name}.sql", "r") as f:
+        answer = f.read()
+
+    solution_df = con.execute(answer).df()
 
 
-st.header("enter your code:")
+st.header("Enter your code:")
 
 query = st.text_area(label="votre code SQL ici", key="user_input")
 if query:
-    result = duckdb.sql(query).df()
+    result = con.execute(query).df()
     st.dataframe(result)
-
+#
     if len(result.columns) != len(solution_df.columns):
         # replace with try result = result(solution_df.columns)
         st.write("Some columns are missing")
@@ -66,11 +115,30 @@ if query:
 
 tab2, tab3 = st.tabs(["Tables", "Solution"])
 with tab2:
-    st.write("table: beverages")
-    st.dataframe(beverages)
-    st.write("table: food_items")
-    st.dataframe(food_items)
-    st.write("expected:")
-    st.dataframe(solution_df)
+    if not exercices.empty:
+        try:
+            # Vérifier que l'index existe avant d'y accéder
+            #exercice_tables = ast.literal_eval(exercices.loc[0, "tables"])
+            # Utiliser directement la valeur sans passer par ast.literal_eval
+            exercice_tables = exercices.loc[0, "tables"]
+
+            # Si exercice_tables est un tableau numpy ou une liste
+            if isinstance(exercice_tables, (list, pd.Series, np.ndarray)):
+                # Afficher chaque table
+                for table in exercice_tables:
+                    st.write(f"table: {table}")
+                    df_table = con.execute(f"select * from {table}").df()
+                    st.dataframe(df_table)
+
+            else:
+                st.write(f"Unexpected format for tables: {exercice_tables}")
+
+        except KeyError:
+            st.write("The 'tables' column or index 0 was not found in the data.")
+    else:
+        st.write("No tables found to display.")
+
+
+#
 with tab3:
-    st.write(ANSWER_STR)
+    st.write(answer)
