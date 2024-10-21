@@ -3,10 +3,24 @@ import io
 import ast
 
 # import numpy as np
+import os
+import logging
 import duckdb
 import pandas as pd
 import numpy as np
 import streamlit as st
+from datetime import date, timedelta
+
+if "data" not in os.listdir():
+    print("creating folder data")
+    logging.error(os.listdir())
+    logging.error("creating folder data")
+    os.mkdir("data")
+
+if "exercises_sql_tables.duckdb" not in os.listdir("data"):
+    exec(open("init_db.py").read())
+    # subprocess.run(["python", "init_db.py"]
+
 
 
 CSV = """
@@ -63,6 +77,7 @@ with st.sidebar :
     # Récupérer les exercices correspondant au thème sélectionné
     exercices = con.execute(f"select * from memory_state where theme = '{theme}'").df()\
         .sort_values("last_reviewed").reset_index(drop=True)
+
 
     # Vérifier si le DataFrame n'est pas vide avant d'accéder aux données
     if not exercices.empty:
