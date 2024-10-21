@@ -25,11 +25,30 @@ muffin,3
 """
 food_items = pd.read_csv(io.StringIO(CSV2))
 
+sizes = """
+size
+XS
+M
+L
+XL
+"""
+sizes = pd.read_csv(io.StringIO(sizes))
+
+trademarks = """
+trademark
+Nike
+Asphalte
+Abercrombie
+Lewis
+"""
+trademarks = pd.read_csv(io.StringIO(trademarks))
+
 ANSWER_STR = """
 select * from beverages 
 cross join food_items"""
 
-con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
+con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=True)
+
 
 
 with st.sidebar :
@@ -42,7 +61,8 @@ with st.sidebar :
     st.write("You selected:", theme)
 
     # Récupérer les exercices correspondant au thème sélectionné
-    exercices = con.execute(f"select * from memory_state where theme = '{theme}'").df()
+    exercices = con.execute(f"select * from memory_state where theme = '{theme}'").df()\
+        .sort_values("last_reviewed").reset_index(drop=True)
 
     # Vérifier si le DataFrame n'est pas vide avant d'accéder aux données
     if not exercices.empty:
@@ -88,7 +108,7 @@ with tab2:
     if not exercices.empty:
         try:
             # Vérifier que l'index existe avant d'y accéder
-            # exercice_tables = ast.literal_eval(exercices.loc[0, "tables"])
+            #exercice_tables = ast.literal_eval(exercices.loc[0, "tables"])
             # Utiliser directement la valeur sans passer par ast.literal_eval
             exercice_tables = exercices.loc[0, "tables"]
 
@@ -97,8 +117,8 @@ with tab2:
                 # Afficher chaque table
                 for table in exercice_tables:
                     st.write(f"table: {table}")
-                    # Vous pouvez afficher les DataFrames ici si nécessaire
-                    st.dataframe(beverages)
+                    df_table = con.execute(f"select * from {table}").df()
+                    st.dataframe(df_table)
 
             else:
                 st.write(f"Unexpected format for tables: {exercice_tables}")
