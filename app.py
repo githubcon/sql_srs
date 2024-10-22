@@ -23,7 +23,6 @@ if "exercises_sql_tables.duckdb" not in os.listdir("data"):
 
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
-<<<<<<< HEAD
 
 CSV = """
 beverage,price
