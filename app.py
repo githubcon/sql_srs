@@ -23,83 +23,9 @@ if "exercises_sql_tables.duckdb" not in os.listdir("data"):
 
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
-<<<<<<< HEAD
-
-CSV = """
-beverage,price
-orange juice,2.5
-Expresso,2
-Tea,3
-"""
-beverages = pd.read_csv(io.StringIO(CSV))
-
-CSV2 = """
-food_item,food_price
-cookie juice,2.5
-chocolatine,2
-muffin,3
-"""
-food_items = pd.read_csv(io.StringIO(CSV2))
-
-sizes = """
-size
-XS
-M
-L
-XL
-"""
-sizes = pd.read_csv(io.StringIO(sizes))
-
-trademarks = """
-trademark
-Nike
-Asphalte
-Abercrombie
-Lewis
-"""
-trademarks = pd.read_csv(io.StringIO(trademarks))
-
-
 ANSWER_STR = """
 select * from beverages 
 cross join food_items"""
-
-con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=True)
-
-
-
-with st.sidebar :
-    theme = st.selectbox(
-        "What would you like to review ?",
-        ("cross_joins", "GroupBy", "Windows Function"),
-        index=None,
-        placeholder="Select a theme...",
-    )
-    st.write("You selected:", theme)
-
-    # Récupérer les exercices correspondant au thème sélectionné
-    exercices = con.execute(f"select * from memory_state where theme = '{theme}'").df()\
-        .sort_values("last_reviewed").reset_index(drop=True)
-
-
-    # Vérifier si le DataFrame n'est pas vide avant d'accéder aux données
-    if not exercices.empty:
-        st.write(exercices)
-    else:
-        st.write("No exercises found for this theme.")
-
-    exercise_name = exercices.loc[0, "exercise_name"]
-    with open(f"answers/{exercise_name}.sql", "r") as f:
-        answer = f.read()
-
-    solution_df = con.execute(answer).df()
-
-
-st.header("Enter your code:")
-
-query = st.text_area(label="votre code SQL ici", key="user_input")
-if query:
-    result = con.execute(query).df()
 
 def check_users_solution(user_query: str) -> None:
     """
@@ -150,8 +76,6 @@ with st.sidebar :
     # Vérifier si le DataFrame n'est pas vide avant d'accéder aux données
     if not exercices.empty:
         st.write(exercices)
-    else:
-        st.write("No exercises found for this theme.")
 
         # Récupérer le nom de l'exercice
         exercise_name = exercices.loc[0, "exercise_name"]
@@ -168,6 +92,11 @@ with st.sidebar :
         else:
             # Message d'erreur si le fichier est introuvable
             st.error(f"File not found: {file_path}")
+            answer = None
+
+    else:
+        st.write("No exercises found for this theme.")
+        answer = None
 
 # Champ de texte pour entrer une requête SQL
 st.header("Enter your code:")
@@ -183,12 +112,13 @@ for n_days in [2, 7, 21]:
         next_review = date.today() + timedelta(days=n_days)
         con.execute(
             f"UPDATE memory_state SET last_reviewed = '{next_review}' WHERE exercise_name = '{exercise_name}'"
-        )
         st.rerun()
+
 
 if st.button("Reset"):
     con.execute(f"UPDATE memory_state SET last_reviewed = '1970-01-01'")
     st.rerun()
+
 
 tab2, tab3 = st.tabs(["Tables", "Solution"])
 with tab2:
