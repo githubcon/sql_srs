@@ -23,7 +23,6 @@ if "exercises_sql_tables.duckdb" not in os.listdir("data"):
 
 con = duckdb.connect(database="data/exercises_sql_tables.duckdb", read_only=False)
 
-
 ANSWER_STR = """
 select * from beverages 
 cross join food_items"""
@@ -113,12 +112,13 @@ for n_days in [2, 7, 21]:
         next_review = date.today() + timedelta(days=n_days)
         con.execute(
             f"UPDATE memory_state SET last_reviewed = '{next_review}' WHERE exercise_name = '{exercise_name}'"
-        )
         st.rerun()
+
 
 if st.button("Reset"):
     con.execute(f"UPDATE memory_state SET last_reviewed = '1970-01-01'")
     st.rerun()
+
 
 tab2, tab3 = st.tabs(["Tables", "Solution"])
 with tab2:
